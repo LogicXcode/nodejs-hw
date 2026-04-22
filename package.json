@@ -1,27 +1,30 @@
 {
   "name": "nodejs-hw",
   "version": "1.0.0",
-  "description": "",
+  "description": "Node.js Homework Project",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server.js"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
+  "author": "LogicX",
   "license": "ISC",
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "eslint": "^10.1.0",
-    "globals": "^17.4.0",
-    "nodemon": "^3.1.14"
-  },
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "helmet": "^8.1.0",
-    "pino": "^10.3.1",
-    "pino-http": "^11.0.0"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.0.0",
+    "pino": "^9.0.0",
+    "pino-http": "^10.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "nodemon": "^3.1.0"
   }
 }
