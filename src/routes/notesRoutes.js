@@ -6,18 +6,21 @@ import {
   getNoteById,
   updateNote,
 } from '../controllers/notesController.js';
-import { getAllNotesSchema,
+
+import { 
+  getAllNotesSchema,
   noteIdSchema,
   createNoteSchema,
-  updateNoteSchema, } from '../validations/notesvalidation.js';
+  updateNoteSchema, 
+} from '../validations/notesValidation.js'; 
 import { celebrate } from 'celebrate';
 
 const router = Router();
 
-router.get('/notes', celebrate(getAllNotesSchema), getAllNotes);
-router.get('/notes/:noteId', celebrate(noteIdSchema),getNoteById);
-router.post('/notes', celebrate(createNoteSchema),createNote);
-router.delete('/notes/:noteId', celebrate(noteIdSchema),deleteNote);
-router.patch('/notes/:noteId', celebrate(updateNoteSchema),updateNote);
+router.get('/', celebrate(getAllNotesSchema), getAllNotes); // Убрал /notes, если в server.js уже есть префикс
+router.get('/:noteId', celebrate(noteIdSchema), getNoteById);
+router.post('/', celebrate(createNoteSchema), createNote);
+router.delete('/:noteId', celebrate(noteIdSchema), deleteNote);
+router.patch('/:noteId', celebrate(updateNoteSchema), updateNote);
 
 export default router;
