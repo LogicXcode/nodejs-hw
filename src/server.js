@@ -23,11 +23,11 @@ export const setupServer = () => {
 
   app.use(authRouter);
   app.use(notesRouter);
-  app.use(userRouter); 
+  app.use(userRouter);
 
-  app.use(errors());
 
   app.use(notFoundHandler);
+  app.use(errors());
   app.use(errorHandler);
 
   const PORT = Number(env('PORT', 3000));

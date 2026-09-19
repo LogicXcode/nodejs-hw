@@ -11,8 +11,5 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendEmail = async (options) => {
-  return await transporter.sendMail({
-    from: env('SMTP_FROM'),
-    ...options,
-  });
+  return await transporter.sendMail(options);
 };
