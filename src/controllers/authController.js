@@ -11,17 +11,22 @@ import { env } from '../utils/env.js';
 import { sendEmail } from '../utils/sendMail.js';
 
 export const registerUser = async (req, res, next) => {
-  const { email, password, name } = req.body;
+  const { email, password, username } = req.body;
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw createHttpError(409, 'Email in use');
+    throw createHttpError(400, 'Email in use'); 
   }
   const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = await User.create({
-    name: name || email,
+    username: username || email,
     email,
     password: hashedPassword,
   });
+
+ 
+  const session = await createSession(newUser._id);
+  setSessionCookies(res, session);
+
   res.status(201).json({
     status: 201,
     message: 'Successfully registered a user!',
@@ -42,12 +47,11 @@ export const loginUser = async (req, res, next) => {
   await Session.deleteOne({ userId: user._id });
   const session = await createSession(user._id);
   setSessionCookies(res, session);
+
   res.status(200).json({
     status: 200,
     message: 'Successfully logged in an user!',
-    data: {
-      accessToken: session.accessToken,
-    },
+    data: user, 
   });
 };
 
@@ -55,8 +59,11 @@ export const logoutUser = async (req, res, next) => {
   if (req.cookies.sessionId) {
     await Session.deleteOne({ _id: req.cookies.sessionId });
   }
+  // Очищуємо всі три cookie
   res.clearCookie('sessionId');
+  res.clearCookie('accessToken');
   res.clearCookie('refreshToken');
+  
   res.status(204).send();
 };
 
@@ -65,15 +72,26 @@ export const refreshUserSession = async (req, res, next) => {
     _id: req.cookies.sessionId,
     refreshToken: req.cookies.refreshToken,
   });
+
   if (!session) {
+    res.clearCookie('sessionId');
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
     throw createHttpError(401, 'Session not found');
   }
+
   if (new Date() > new Date(session.refreshTokenValidUntil)) {
+    await Session.deleteOne({ _id: session._id });
+    res.clearCookie('sessionId');
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
     throw createHttpError(401, 'Refresh token expired');
   }
+
   await Session.deleteOne({ _id: session._id });
   const newSession = await createSession(session.userId);
   setSessionCookies(res, newSession);
+
   res.status(200).json({
     status: 200,
     message: 'Successfully refreshed a session!',
@@ -95,7 +113,6 @@ export const requestResetEmail = async (req, res, next) => {
     });
   }
 
-
   const resetToken = jwt.sign(
     { sub: user._id, email: user.email },
     env('JWT_SECRET'),
@@ -112,12 +129,11 @@ export const requestResetEmail = async (req, res, next) => {
   const templateSource = await fs.readFile(templatePath, 'utf-8');
   const template = handlebars.compile(templateSource);
   const html = template({
-    name: user.name,
+    name: user.username,
     link: `${env('FRONTEND_DOMAIN')}/reset-password?token=${resetToken}`,
   });
 
   try {
-  
     await sendEmail({
       from: env('SMTP_FROM'),
       to: email,
