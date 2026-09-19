@@ -1,65 +1,95 @@
-import Note from '../models/note.js';
+import { Note } from '../models/note.js';
+import createHttpError from 'http-errors';
 
-// Отримати всі нотатки
-export const getAllNotes = async (req, res) => {
+
+export const getAllNotes = async (req, res, next) => {
   try {
     const notes = await Note.find();
-    res.status(200).json(notes);
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully found notes!',
+      data: notes,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// Отримати нотатку за ID
-export const getNoteById = async (req, res) => {
+
+export const getNoteById = async (req, res, next) => {
   try {
-    const note = await Note.findById(req.params.noteId);
+    const { id } = req.params;
+    const note = await Note.findById(id);
+
     if (!note) {
-      return res.status(404).json({ message: 'Нотатку не знайдено' });
+      throw createHttpError(404, 'Note not found');
     }
-    res.status(200).json(note);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
-// Створити нову нотатку
-export const createNote = async (req, res) => {
-  try {
-    const newNote = await Note.create(req.body);
-    res.status(201).json(newNote);
+    res.status(200).json({
+      status: 200,
+      message: `Successfully found note with id ${id}!`,
+      data: note,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
 
-export const updateNote = async (req, res) => {
+export const createNote = async (req, res, next) => {
   try {
-    const updatedNote = await Note.findByIdAndUpdate(req.params.noteId, req.body, {
-      new: true,
+    const note = await Note.create(req.body);
+    res.status(201).json({
+      status: 201,
+      message: 'Successfully created a note!',
+      data: note,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const updateNote = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const note = await Note.findByIdAndUpdate(id, req.body, {
+      new: false, 
+      returnDocument: 'after', 
       runValidators: true,
     });
-    if (!updatedNote) {
-      return res.status(404).json({ message: 'Нотатку не знайдено' });
+
+    if (!note) {
+      throw createHttpError(404, 'Note not found');
     }
-    res.status(200).json(updatedNote);
+
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully patched a note!',
+      data: note,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
 
-export const deleteNote = async (req, res) => {
+export const deleteNote = async (req, res, next) => {
   try {
-    const deletedNote = await Note.findByIdAndDelete(req.params.noteId);
-    if (!deletedNote) {
-      return res.status(404).json({ message: 'Нотатку не знайдено' });
+    const { id } = req.params;
+    const note = await Note.findByIdAndDelete(id);
+
+    if (!note) {
+      throw createHttpError(404, 'Note not found');
     }
-    res.status(200).json({ message: 'Нотатку успішно видалено' });
+
+    
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully deleted a note!',
+      data: note,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
-
-

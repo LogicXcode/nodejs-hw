@@ -1,8 +1,30 @@
-import mongoose from 'mongoose';
+import { Schema, model } from 'mongoose';
 
-const noteSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  content: { type: String, required: true }
-}, { timestamps: true });
+const notesSchema = new Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    content: {
+      type: String,
+      required: false,
+      default: '',
+      trim: true,
+    },
+    tag: {
+      type: String,
+      required: false,
+      default: 'Todo',
+      trim: true,
+      enum: ['Todo', 'Work', 'Personal', 'Other'],
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  },
+);
 
-export default mongoose.model('Note', noteSchema);
+export const Note = model('note', notesSchema);
