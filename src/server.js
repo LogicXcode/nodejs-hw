@@ -1,36 +1,33 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { connectMongoDB } from './db/connectMongoDB.js';
-import { logger } from './middleware/logger.js';
-import { notFoundHandler } from './middleware/notFoundHandler.js';
+import cookieParser from 'cookie-parser';
+import pino from 'http-logger';
+import { env } from './utils/env.js';
+import notesRouter from './routes/notesRoutes.js';
+import authRouter from './routes/authRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { errors } from 'celebrate';
-import notesRoutes from './routes/notesRoutes.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
 
-dotenv.config();
-
-const PORT = process.env.PORT || 3000;
-
-export const setupServer = async () => {
-  await connectMongoDB();
-
+export const setupServer = () => {
   const app = express();
 
-  app.use(logger);
-  app.use(cors());
   app.use(express.json());
+  app.use(cors());
+  app.use(cookieParser());
 
-  app.use(notesRoutes);
 
-  app.use(notFoundHandler);
-  
-  app.use(errors());
+  app.use('/auth', authRouter);
+
+  // Роути нотаток
+  app.use('/notes', notesRouter);
+
+
+  app.use('*', notFoundHandler);
   app.use(errorHandler);
+
+  const PORT = Number(env('PORT', 3000));
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 };
-
-setupServer();
