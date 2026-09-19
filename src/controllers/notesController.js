@@ -73,7 +73,7 @@ export const updateNote = async (req, res, next) => {
   const note = await Note.findOneAndUpdate(
     { _id: noteId, userId: req.user._id },
     req.body,
-    { new: true, runValidators: true },
+    { returnDocument: 'after', runValidators: true },
   );
 
   if (!note) {
@@ -95,5 +95,9 @@ export const deleteNote = async (req, res, next) => {
     throw createHttpError(404, 'Note not found');
   }
 
-  res.status(204).send();
+  res.status(200).json({
+    status: 200,
+    message: 'Successfully deleted a note!',
+    data: note,
+  });
 };
