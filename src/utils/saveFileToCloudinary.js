@@ -1,6 +1,6 @@
 import cloudinary from 'cloudinary';
-import fs from 'node:fs/promises';
 import { env } from './env.js';
+import streamifier from 'streamifier';
 
 cloudinary.v2.config({
   cloud_name: env('CLOUDINARY_CLOUD_NAME'),
@@ -8,13 +8,16 @@ cloudinary.v2.config({
   api_secret: env('CLOUDINARY_API_SECRET'),
 });
 
-export const saveFileToCloudinary = async (file) => {
-  try {
-    const response = await cloudinary.v2.uploader.upload(file.path);
-    await fs.unlink(file.path);
-    return response.secure_url;
-  } catch (error) {
-    await fs.unlink(file.path);
-    throw error;
-  }
+export const saveFileToCloudinary = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.v2.uploader.upload_stream(
+      { folder: 'avatars' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      },
+    );
+
+    streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+  });
 };
