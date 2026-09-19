@@ -1,95 +1,69 @@
 import { Note } from '../models/note.js';
 import createHttpError from 'http-errors';
 
-
 export const getAllNotes = async (req, res, next) => {
   try {
-    const notes = await Note.find();
+    const { page = 1, perPage = 10, tag, search } = req.query;
+    const limit = parseInt(perPage, 10);
+    const skip = (parseInt(page, 10) - 1) * limit;
+
+    const filter = {};
+    if (tag) filter.tag = tag;
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const [notes, totalNotes] = await Promise.all([
+      Note.find(filter).skip(skip).limit(limit),
+      Note.countDocuments(filter),
+    ]);
+
     res.status(200).json({
       status: 200,
       message: 'Successfully found notes!',
-      data: notes,
+      data: {
+        page: parseInt(page, 10),
+        perPage: limit,
+        totalNotes,
+        totalPages: Math.ceil(totalNotes / limit),
+        notes,
+      },
     });
   } catch (error) {
     next(error);
   }
 };
-
 
 export const getNoteById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const note = await Note.findById(id);
-
-    if (!note) {
-      throw createHttpError(404, 'Note not found');
-    }
-
-    res.status(200).json({
-      status: 200,
-      message: `Successfully found note with id ${id}!`,
-      data: note,
-    });
-  } catch (error) {
-    next(error);
-  }
+    const note = await Note.findById(req.params.noteId);
+    if (!note) throw createHttpError(404, 'Note not found');
+    res.status(200).json({ status: 200, message: 'Successfully found note!', data: note });
+  } catch (error) { next(error); }
 };
-
 
 export const createNote = async (req, res, next) => {
   try {
     const note = await Note.create(req.body);
-    res.status(201).json({
-      status: 201,
-      message: 'Successfully created a note!',
-      data: note,
-    });
-  } catch (error) {
-    next(error);
-  }
+    res.status(201).json({ status: 201, message: 'Successfully created a note!', data: note });
+  } catch (error) { next(error); }
 };
-
 
 export const updateNote = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const note = await Note.findByIdAndUpdate(id, req.body, {
-      new: false, 
-      returnDocument: 'after', 
-      runValidators: true,
-    });
-
-    if (!note) {
-      throw createHttpError(404, 'Note not found');
-    }
-
-    res.status(200).json({
-      status: 200,
-      message: 'Successfully patched a note!',
-      data: note,
-    });
-  } catch (error) {
-    next(error);
-  }
+    const note = await Note.findByIdAndUpdate(req.params.noteId, req.body, { returnDocument: 'after', runValidators: true });
+    if (!note) throw createHttpError(404, 'Note not found');
+    res.status(200).json({ status: 200, message: 'Successfully patched a note!', data: note });
+  } catch (error) { next(error); }
 };
-
 
 export const deleteNote = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const note = await Note.findByIdAndDelete(id);
-
-    if (!note) {
-      throw createHttpError(404, 'Note not found');
-    }
-
-    
-    res.status(200).json({
-      status: 200,
-      message: 'Successfully deleted a note!',
-      data: note,
-    });
-  } catch (error) {
-    next(error);
-  }
+    const note = await Note.findByIdAndDelete(req.params.noteId);
+    if (!note) throw createHttpError(404, 'Note not found');
+    res.status(200).json({ status: 200, message: 'Successfully deleted a note!', data: note });
+  } catch (error) { next(error); }
 };
