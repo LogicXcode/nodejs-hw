@@ -16,9 +16,17 @@ const notesSchema = new Schema(
     tag: {
       type: String,
       required: false,
-      default: 'Todo',
+      default: 'Ideas',
       trim: true,
-      enum: ['Todo', 'Work', 'Personal', 'Other'],
+      enum: [
+        'Meeting',
+        'Shopping',
+        'Ideas',
+        'Travel',
+        'Finance',
+        'Health',
+        'Important',
+      ],
     },
   },
   {
