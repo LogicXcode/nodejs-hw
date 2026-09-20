@@ -29,7 +29,6 @@ const notesSchema = new Schema(
         'Finance',
         'Health',
         'Important',
-        'Other',
       ], 
     },
   },
